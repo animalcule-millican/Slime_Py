@@ -1,0 +1,35 @@
+outlog: /mnt/bigdata/linuxhome/millican/repos/Slime_Py/log
+output_directory: /mnt/bigdata/linuxhome/millican/repos/Slime_Py/slime_out
+project_directory: /mnt/bigdata/linuxhome/millican/repos/Slime_Py
+reference_database: ['nutrient-acquisition', 'bioremediation', 'plant-signal-production', 'microbial-eps', 'antimicrobial-production', 'plant-stimulation', 'plant-immune-priming', 'root-colonization', 'nodulation', 'biocontrol']
+reference_location: /home/glbrc.org/millican/ref_db/pgp
+sample_directory: /home/glbrc.org/millican/metagenome/lamps/data/reads/raw
+sample_name:
+  - mt5004
+  - CABBI19_009
+  - S5201_1
+  - CABBI19_001
+  - S2201_1
+  - mt3004
+  - S5201_3
+  - mt2023
+  - mt5016
+  - S5201_4
+  - S2201_2
+  - S2201_4
+  - S5201_2
+  - CABBI19_005
+  - S2201_3
+  - mt2005
+taxa: ['bacteria', 'archaea', 'plant', 'fungi', 'protozoa', 'viral','invertebrate']
+kmer: ['21', '31', '51']
+workflow_stats: /mnt/bigdata/linuxhome/millican/repos/Slime_Py/slime/repos/Slime_Py/test/test_output/stats.txt
+working_directory: /mnt/bigdata/linuxhome/millican/repos/Slime_Py/workflow
+sourmash_directory: "/home/glbrc.org/millican/ref_db/sourmash"
+taxonomy_lineage: 
+  - "/home/glbrc.org/millican/ref_db/sourmash/lineage/bacteria.lineages.csv"
+  - "/home/glbrc.org/millican/ref_db/sourmash/lineage/archaea.lineages.csv"
+  - "/home/glbrc.org/millican/ref_db/sourmash/lineage/fungi.lineages.csv"
+  - "/home/glbrc.org/millican/ref_db/sourmash/lineage/plant.lineages.csv"
+  - "/home/glbrc.org/millican/ref_db/sourmash/lineage/protozoa.lineages.csv"
+  - "/home/glbrc.org/millican/ref_db/sourmash/lineage/viral.lineages.csv"

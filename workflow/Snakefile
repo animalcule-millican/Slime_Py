@@ -1,0 +1,122 @@
+#!/usr/bin/env snakemake -s
+import os
+
+configfile: "/home/glbrc.org/millican/repos/Slime_Py/workflow/config.yml"
+#configfile: "/home/glbrc.org/millican/repos/Slime_Py/test/config.yml"
+
+workdir: config["working_directory"]
+
+module preprocess:
+    snakefile: "rules/preprocess_workflow.smk"
+    config: "config/preprocess_config.yml"
+
+module search:
+    snakefile: "rules/search_workflow.smk"
+    config: "config/search_config.yml"
+
+module taxonomy:
+    snakefile: "rules/taxonomy_workflow.smk"
+    config: "config/taxonomy_config.yml"
+
+module read_counts:
+    snakefile: "rules/read_counts.smk"
+    config: "config/read_counts_config.yml"
+
+
+#include: "rules/preprocess_workflow.smk"
+#include: "rules/search_workflow.smk"
+#include: "rules/taxonomy_workflow.smk"
+#include: "rules/read_counts.smk"
+
+def create_tmpdir():
+    import random
+    import os
+    import pickle
+    with open("/home/glbrc.org/millican/repos/metagenome_snakemake/etc/adj-aml.pkl", 'rb') as f:
+        adj, aml = pickle.load(f)
+    temp_dir_base = "/home/glbrc.org/millican/TMPDIR"    # Replace with the base path for temporary directories
+    # Construct the temporary directory path
+    tmpdir = os.path.join(temp_dir_base, f"{random.choice(adj)}-{random.choice(aml)}")
+    # Check if the directory exists, and find a new combination if it does
+    while os.path.exists(tmpdir):
+        tmpdir = os.path.join(temp_dir_base, f"{random.choice(adj)}-{random.choice(aml)}")
+    # Once we find a combination that does not already exist
+    # Create the temporary directory
+    os.makedirs(tmpdir, exist_ok=True)
+    return tmpdir
+
+# function to create list of sample names
+#reference_database = config["reference_database"]
+if isinstance(config["sample_name"], list):
+    sample_names = "|".join(config["sample_name"])
+else:
+    sample_names = config["sample_name"]
+
+if isinstance(config["taxa"], list):
+    taxons = "|".join(config["taxa"])
+else:
+    taxons = config["taxa"]
+
+wildcard_constraints:
+    sample_name = sample_names,
+    reference_database = "|".join(config["reference_database"]),
+    taxa = taxons,
+    kmer = "|".join(config["kmer"]),
+    sourmash_directory = config["sourmash_directory"]
+
+sourmash_directory = config["sourmash_directory"]
+
+rule all:
+    input:
+        expand("{output_directory}/counts/{sample_name}.{reference_database}.query_hits.txt", output_directory=config["output_directory"], sample_name=config["sample_name"], reference_database=config["reference_database"]),
+        expand("{output_directory}/fasta/{sample_name}.{reference_database}.query_hits.fna", output_directory=config["output_directory"], sample_name=config["sample_name"], reference_database=config["reference_database"])
+        expand("{output_directory}/database/{sample_name}.queryDB.idx", output_directory=config["output_directory"], sample_name=config["sample_name"]),
+        expand("{output_directory}/database/{sample_name}.queryDB", output_directory=config["output_directory"], sample_name=config["sample_name"]),
+        expand("{output_directory}/reads/{sample_name}.ecc.fq.gz", output_directory=config["output_directory"], sample_name=config["sample_name"]),
+        expand("{output_directory}/counts/{sample_name}.{reference_database}.counted_mapped_hits.txt", output_directory=config["output_directory"], sample_name=config["sample_name"], reference_database=config["reference_database"]),
+        expand("{output_directory}/counts/{sample_name}.{reference_database}.reads_mapped_hits.txt", output_directory=config["output_directory"], sample_name=config["sample_name"], reference_database=config["reference_database"]),
+        expand("{output_directory}/references/sketch/{taxa}.zip", taxa=config["taxa"], output_directory=config["output_directory"]),
+        expand("{output_directory}/references/{taxa}_lineage.txt", taxa=config["taxa"], output_directory=config["output_directory"]),
+        expand("{output_directory}/gather/{sample_name}_k{kmer}.{taxa}.csv", output_directory = config["output_directory"], sample_name = config["sample_name"], kmer = config["kmer"], taxa = config["taxa"]),
+        expand("{output_directory}/taxonomy/{sample_name}_k{kmer}.{taxa}.csv", output_directory = config["output_directory"], sample_name = config["sample_name"], kmer = config["kmer"], taxa = config["taxa"]),
+        expand("{output_directory}/{sample_name}.{reference_database}.clean_up.txt", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"])
+    default_target: True
+
+
+#rule all:
+#    input:
+#        expand("{output_directory}/counts/{sample_name}.{reference_database}.counted_mapped_hits.txt", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"]),
+#        expand("{output_directory}/counts/{sample_name}.{reference_database}.query_hits.txt", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"]),
+#        expand("{output_directory}/fasta/{sample_name}.{reference_database}.query_hits.fna", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"]),
+#        expand("{output_directory}/taxonomy/{sample_name}_k{kmer}.{taxa}.csv", kmer = config["kmer"], sample_name = config["sample_name"], output_directory = config["output_directory"], taxa = config["taxa"]),
+#        expand("{output_directory}/gather/{sample_name}_k{kmer}.{taxa}.csv", kmer = config["kmer"], sample_name = config["sample_name"], output_directory = config["output_directory"], taxa = config["taxa"])
+#    default_target: True
+
+rule cleanup:
+    input:
+        expand("{output_directory}/counts/{sample_name}.{reference_database}.counted_mapped_hits.txt", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"]),
+        expand("{output_directory}/counts/{sample_name}.{reference_database}.query_hits.txt", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"]),
+        expand("{output_directory}/fasta/{sample_name}.{reference_database}.query_hits.fna", sample_name = config["sample_name"], reference_database = config["reference_database"], output_directory = config["output_directory"]),
+        expand("{output_directory}/taxonomy/{sample_name}_k{kmer}.{taxa}.csv", kmer = config["kmer"], sample_name = config["sample_name"], output_directory = config["output_directory"], taxa = config["taxa"]),
+        expand("{output_directory}/gather/{sample_name}_k{kmer}.{taxa}.csv", kmer = config["kmer"], sample_name = config["sample_name"], output_directory = config["output_directory"], taxa = config["taxa"])
+    output:
+        "{output_directory}/{sample_name}.{reference_database}.clean_up.txt"
+    params:
+        output_directory = lambda wildcards: config["output_directory"],
+        kmer = lambda wildcards: config["kmer"],
+        taxa = lambda wildcards: config["taxa"],
+        sample_name = lambda wildcards: config["sample_name"]
+    threads: 1
+    resources:
+        mem_mb = 1000
+    shell:
+        """
+        out={params.output_directory}
+        sam={params.sample_name}
+        rm -f $out/reads/{params.sample_name}.ecc.fq.gz
+        rm -f $out/database/{params.sample_name}*.*DB
+        rm -f $out/database/{params.sample_name}*.*DB*
+        rm -f $out/sigs/{params.sample_name}.sig.gz
+        rm -f $out/gather/{params.sample_name}_k{params.kmer}.{params.taxa}.fastgather.csv"
+        echo "$(ls -lh $out/{params.sample_name}*)" > {output}
+        """
